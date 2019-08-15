@@ -12,7 +12,7 @@ import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 
-class X_flu:
+class GUI:
     def __init__(self, master):
         # specify NeXus file format
         # To-do: change this section after getting a sample file
@@ -47,18 +47,18 @@ class X_flu:
         # "Draw" interface row-wise
         ttk.Label(self.frame, text="Select file").grid(column=1, row=1, columnspan=3, sticky=W)
         
-        self.fname_entry = ttk.Entry(self.frame, width=50, textvariable=self.fname) #To-do: make readonly
+        self.fname_entry = ttk.Entry(self.frame, width=80, textvariable=self.fname) #To-do: make readonly
         self.fname_entry.grid(column=1, row=2, columnspan=4, sticky=W)
         self.fopen_button = ttk.Button(self.frame, text="...", command=self.fopen).grid(column=5, row=2, sticky=E)
         
         ttk.Label(self.frame, text="Energy region").grid(column=1, row=3, columnspan=3, sticky=W)
         
         ttk.Label(self.frame, text="from").grid(column=1, row=4, sticky=E)
-        self.e_from_entry = ttk.Entry(self.frame, width=7, textvariable=self.e_from)
+        self.e_from_entry = ttk.Entry(self.frame, width=20, textvariable=self.e_from)
         self.e_from_entry.grid(column=2, row=4, sticky=(W, E))
         
         ttk.Label(self.frame, text="to").grid(column=3, row=4, sticky=E )
-        self.e_to_entry = ttk.Entry(self.frame, width=7, textvariable=self.e_to)
+        self.e_to_entry = ttk.Entry(self.frame, width=20, textvariable=self.e_to)
         self.e_to_entry.grid(column=4, row=4, sticky=(W, E))
         
         
@@ -88,7 +88,7 @@ class X_flu:
         # call render on pressing "Enter"
         self.master.bind('<Return>', self.render)
     
-    def fopen(self):
+    def fopen(self, *args):
         try:
             self.fname_val = filedialog.askopenfilename()
             if self.fname_val.endswith(self.Nexus_spec['ftype']):              
@@ -109,13 +109,17 @@ class X_flu:
                     return
                 self.fname_entry.delete(0, 'end')
                 self.fname_entry.insert(0, self.fname_val)
+                
+                # optional - fill ergange with min and max energies from file
+                self.e_from_entry.insert(0, str(self.energs.min()))
+                self.e_to_entry.insert(0, str(self.energs.max()))
             else:
                 messagebox.showinfo(message='File format not supported')
         except ValueError:
             pass
 
         
-    def render(self):
+    def render(self, *args):
         try:
             self.fname_val = self.fname_entry.get()
             e_from_val = float(self.e_from_entry.get())
@@ -153,7 +157,7 @@ class X_flu:
                 
 def main(): 
     root = Tk()
-    X_flu(root)
+    GUI(root)
     root.mainloop()
 
 if __name__ == '__main__':
