@@ -8,6 +8,7 @@ setup(name='x_flu',
       author_email='dorofeeva.l@gmail.com',
       license='MIT',
       packages=['x_flu'],
+      package_data={'x_flu': ['img/*.png','data/pertxre_lines.csv']},
       include_package_data=True,
       install_requires=[
         'numpy>=1.16',

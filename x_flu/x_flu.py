@@ -51,8 +51,9 @@ class GUI:
         self.entry_loaded = False
                
         # get x-ray energy lines
-        self.xrelines_names = np.loadtxt(os.path.join('data', 'pertxre_lines.csv'),delimiter=',',dtype=object, usecols=(0,1))
-        self.xrelines_vals = np.loadtxt(os.path.join('data', 'pertxre_lines.csv'),delimiter=',',dtype=int, usecols=2)
+        data_path = os.path.join(os.path.dirname(__file__),'data')
+        self.xrelines_names = np.loadtxt(os.path.join(data_path, 'pertxre_lines.csv'),delimiter=',',dtype=object, usecols=(0,1))
+        self.xrelines_vals = np.loadtxt(os.path.join(data_path, 'pertxre_lines.csv'),delimiter=',',dtype=int, usecols=2)
         # "Draw" interface row-wise
         ttk.Label(self.frame, text="Select file").grid(column=1, row=1, columnspan=3, sticky=(W,S))
 
@@ -96,10 +97,11 @@ class GUI:
         self.cmframe.grid(column=1, row=10, columnspan=7, rowspan=2, sticky=(W,S))
         self.cmap = StringVar()
         ttk.Label(self.cmframe, text="Colour map").grid(column=1, row=1, columnspan=4, sticky=(W,S))
-        self.img_hc = PhotoImage(file=os.path.join('img', 'heatcool.png'))
-        self.img_jet = PhotoImage(file=os.path.join('img', 'jet.png'))
-        self.img_hsv = PhotoImage(file=os.path.join('img', 'hsv.png'))
-        self.img_g = PhotoImage(file=os.path.join('img', 'greys.png'))
+        img_path = os.path.join(os.path.dirname(__file__),'img')
+        self.img_hc = PhotoImage(file=os.path.join(img_path, 'heatcool.png'))
+        self.img_jet = PhotoImage(file=os.path.join(img_path, 'jet.png'))
+        self.img_hsv = PhotoImage(file=os.path.join(img_path, 'hsv.png'))
+        self.img_g = PhotoImage(file=os.path.join(img_path, 'greys.png'))
         self.heatcool = ttk.Radiobutton(self.cmframe, text='HeatCool', image=self.img_hc, variable=self.cmap, value='seismic')
         self.heatcool.grid(column=1, row=2)
         self.jet = ttk.Radiobutton(self.cmframe, text='Jet', image=self.img_jet, variable=self.cmap, value='jet')
