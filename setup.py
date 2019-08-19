@@ -10,6 +10,7 @@ setup(name='x_flu',
       packages=['x_flu'],
       install_requires=[
         'numpy>=1.16',
+		'scipy>=1.3',
         'h5py>=2.9',
         'matplotlib>=3',
         'tk'
