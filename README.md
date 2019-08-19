@@ -1,5 +1,5 @@
 # `X_flu` 
-X_flu is a GUI application for X-ray fluorescence map visualization.
+X_flu is a python GUI application for X-ray fluorescence map visualization.
 
 Application supports visualization of files with extensions *.hdf5, .nxs, .nex*, 
 with one or multiple entries.
@@ -8,6 +8,18 @@ User can choose one of the two visualization methods:
 * render data as a set of overlapping **patches** (very time consuming);
 * **interpolate** data on a grid before visualization.
 default is the **interpolate** method.
+
+## Requirements
+    python>=3.7
+    
+    tk
+    numpy>=1.16
+	scipy>=1.3
+    h5py>=2.9
+    matplotlib>=3
+
+    
+    
 
 ## Installation
 Install the package (optional):

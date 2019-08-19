@@ -364,10 +364,3 @@ class GUI:
             messagebox.showinfo(message='File name or energy range is empty or incorrect')
             pass
 
-def main():
-    root = Tk()
-    GUI(root)
-    root.mainloop()
-
-if __name__ == '__main__':
-    main()

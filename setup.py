@@ -8,10 +8,13 @@ setup(name='x_flu',
       author_email='dorofeeva.l@gmail.com',
       license='MIT',
       packages=['x_flu'],
+      include_package_data=True,
       install_requires=[
         'numpy>=1.16',
 		'scipy>=1.3',
         'h5py>=2.9',
         'matplotlib>=3',
-        'tk'
-    ])
+        'tk'],
+      long_description=open('README.md').read(),
+      scripts=['bin/x_flu']
+      )
