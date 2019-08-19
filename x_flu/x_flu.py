@@ -365,4 +365,3 @@ class GUI:
         except ValueError:
             messagebox.showinfo(message='File name or energy range is empty or incorrect')
             pass
-
