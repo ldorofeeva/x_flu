@@ -356,9 +356,11 @@ class GUI:
                 if not grid_step:
                     grid_step_val = self.default_grid_step
                     self.grid_step.set(grid_step_val)
+                    messagebox.showinfo(message=f'Wrong grid step. Setting to default value: {self.default_grid_step} mm')
                 elif float(grid_step)<=0:
                     grid_step_val = self.default_grid_step
                     self.grid_step.set(grid_step_val)
+                    messagebox.showinfo(message=f'Wrong grid step. Setting to default value: {self.default_grid_step} mm')
                 else:
                     grid_step_val = float(grid_step)
                 #
@@ -381,9 +383,11 @@ class GUI:
                 if not patch_size:
                     patch_size_val = self.default_beam_size
                     self.grid_step.set(patch_size_val)
+                    messagebox.showinfo(message=f'Wrong patch size. Setting to default beam size value: {self.default_beam_size} mm')
                 elif float(patch_size)<=0:
                     patch_size_val = self.default_beam_size
                     self.patch_size.set(patch_size_val)
+                    messagebox.showinfo(message=f'Wrong patch size. Setting to default beam size value: {self.default_beam_size} mm')
                 else:
                     patch_size_val = float(patch_size)
                 
