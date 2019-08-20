@@ -5,8 +5,10 @@ Application supports visualization of files with extensions *.hdf5, .nxs, .nex*,
 with one or multiple entries.
                         
 User can choose one of the two visualization methods:
+
 * render data as a set of overlapping **patches** (very time consuming);
 * **interpolate** data on a grid before visualization.
+
 default is the **interpolate** method.
 
 ## Requirements
@@ -18,16 +20,21 @@ default is the **interpolate** method.
     h5py>=2.9
     matplotlib>=3
 
-    
-    
-
 ## Installation
-Install the package (optional):
+In your python 3.7 environment:
 
     $ python setup.py install
 
-## Launch as script
-    $ python x_flu.py
+## Launch
+In your python 3.7 environment:
+
+**On Windows**
+
+    $ python -m x_flu
+    
+**On Linux**
+
+    $ x_flu
 
 ## Usage
 1. Select an x-ray fluorescence map file;

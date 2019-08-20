@@ -238,7 +238,7 @@ class GUI:
                 return
             idx0 = 0
             idx1 = 10*(len(self.signal[0])-1)
-            self.ereg_lbl['text'] = self.ereg_lbl['text'] + f' (from {idx0} to {idx1} eV)'
+            self.ereg_lbl['text'] = f'Energy region (from {idx0} to {idx1} eV)'
         self.entry_loaded = True
         
     def set_advanced_view(self, *args):        
