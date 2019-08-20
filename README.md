@@ -1,8 +1,8 @@
 # `X_flu` 
 X_flu is a python GUI application for X-ray fluorescence map visualization.
 
-Application supports visualization of files with extensions *.hdf5, .nxs, .nex*, 
-with one or multiple entries.
+Application supports visualization of files with extensions 
+*.hdf5*, *.nxs*, *.nex*, with one or multiple entries.
                         
 User can choose one of the two visualization methods:
 
@@ -43,3 +43,18 @@ In your python 3.7 environment:
 3. Select preferred Colour map;
 4. (optional) choose preferred visualization method;
 5. Press "Render" button or simply press Enter to visualize the data.
+
+**Patch visualization parameters:**
+
+* **patch_size** - equal to the actual size of the beam in millimeters.
+
+**Interpolate visualization parameters:**
+
+* **grid_step** - size of the interpolation grid cell in millimiters;
+* **method** - interpolation method (either nearest neighbour or linear).
+
+*Additional feature*:
+On energy region selection, the application searches for 
+X-ray K + L Emission Lines in the region and prints out 
+corresponding periodic table elements if less than 4 lines are found.
+Periodic Table and X-ray energies data are taken from BRUKER.

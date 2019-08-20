@@ -101,6 +101,7 @@ class GUI:
         self.img_hc = PhotoImage(file=os.path.join(img_path, 'heatcool.png'))
         self.img_jet = PhotoImage(file=os.path.join(img_path, 'jet.png'))
         self.img_hsv = PhotoImage(file=os.path.join(img_path, 'hsv.png'))
+        self.img_v = PhotoImage(file=os.path.join(img_path, 'viridis.png'))
         self.img_g = PhotoImage(file=os.path.join(img_path, 'greys.png'))
         self.heatcool = ttk.Radiobutton(self.cmframe, text='HeatCool', image=self.img_hc, variable=self.cmap, value='seismic')
         self.heatcool.grid(column=1, row=2)
@@ -108,9 +109,11 @@ class GUI:
         self.jet.grid(column=2, row=2)
         self.hsv = ttk.Radiobutton(self.cmframe, text='HSV', image=self.img_hsv, variable=self.cmap, value='hsv')
         self.hsv.grid(column=3, row=2)
-        self.greys = ttk.Radiobutton(self.cmframe, text='Greyscale', image=self.img_g, variable=self.cmap, value='Greys')
+        self.greys = ttk.Radiobutton(self.cmframe, text='Viridis', image=self.img_v, variable=self.cmap, value='viridis')
         self.greys.grid(column=4, row=2)
-        self.cmap.set('jet')
+        self.greys = ttk.Radiobutton(self.cmframe, text='Greyscale', image=self.img_g, variable=self.cmap, value='Greys')
+        self.greys.grid(column=5, row=2)
+        self.cmap.set('viridis')
 
         #Advanced settings - choose patching or interpolation
         self.advframe = ttk.Frame(self.frame)
@@ -217,29 +220,38 @@ class GUI:
                 self.fname_entry.configure(state='readonly')
                 self.select_nxs_entry['values'] = grps
                 #grp = grps[0]
-                #self.nxs_entry.set(grp)
+                self.nxs_entry.set('')
+                self.entry_loaded = False
                 self.file_loaded = True
                 
         except ValueError:
             pass
         
     def load_entry(self, *args):
-        self.reinterpolate = True
-        fname_val = self.fname.get()
-        with h5py.File(fname_val, "r") as h5f:
-            grp = self.nxs_entry.get()
-            self.xs = h5f[grp + '/' + self.Nexus_spec['subgrp'] + '/' + self.Nexus_spec['ds_x']][:]
-            self.ys = h5f[grp + '/' + self.Nexus_spec['subgrp'] + '/' + self.Nexus_spec['ds_y']][:]
-            self.signal = h5f[grp + '/' + self.Nexus_spec['subgrp'] + '/' + self.Nexus_spec['ds_signal']][:]
-            # check the shape of datasets, if wrong
-            if not self.signal.shape[0] == self.xs.shape[0] == self.ys.shape[0]:
-                messagebox.showinfo(message=f'Datasets shape do not correspond, group {grp}')
-                self.entry_loaded = False 
-                return
-            idx0 = 0
-            idx1 = 10*(len(self.signal[0])-1)
-            self.ereg_lbl['text'] = f'Energy region (from {idx0} to {idx1} eV)'
-        self.entry_loaded = True
+        grp = self.nxs_entry.get()
+        if grp:
+            self.reinterpolate = True
+            fname_val = self.fname.get()
+            with h5py.File(fname_val, "r") as h5f:
+                xs = h5f[grp + '/' + self.Nexus_spec['subgrp'] + '/' + self.Nexus_spec['ds_x']][:]
+                self.ys = h5f[grp + '/' + self.Nexus_spec['subgrp'] + '/' + self.Nexus_spec['ds_y']][:]
+                self.signal = h5f[grp + '/' + self.Nexus_spec['subgrp'] + '/' + self.Nexus_spec['ds_signal']][:]
+                # check the shape of datasets, if wrong
+                if not self.signal.shape[0] == xs.shape[0] == self.ys.shape[0]:
+                    messagebox.showinfo(message=f'Datasets shape do not correspond, group {grp}')
+                    self.entry_loaded = False 
+                    return
+                
+                # Pre-process the x values as in example
+                shift = 0.5
+                self.xs = np.zeros(len(xs))
+                self.xs[0] = xs[0]
+                for i in range(1, len(self.xs)):
+                    self.xs[i] = xs[i] + shift * (xs[i] - xs[i - 1])
+                idx0 = 0
+                idx1 = 10*(len(self.signal[0])-1)
+                self.ereg_lbl['text'] = f'Energy region (from {idx0} to {idx1} eV)'
+            self.entry_loaded = True
         
     def set_advanced_view(self, *args):        
         adv_s_val = self.adv_settings.get()
@@ -302,13 +314,13 @@ class GUI:
                 messagebox.showinfo(message='Lower energy limit is higher than upper energy limit. Please enter a correct energy range.')
                 return
 
+            #round to the nearest available values
             idx0 = int(e_from_val/10)
             if idx0<0: idx0=0
-            idx1 = int(e_to_val/10)
-            if idx1<0: idx1=0
-            
+            idx1 = int(e_to_val/10)+1 
+            if idx1<0: idx1=1
             self.e_from.set(str(idx0*10))
-            self.e_to.set(str(idx1*10))
+            self.e_to.set(str((idx1-1)*10))
 
             xmin = round(min(self.xs),3)
             xmax = round(max(self.xs),3)
@@ -328,10 +340,7 @@ class GUI:
                     self.reinterpolate = False
                     
                 fig, ax = plt.subplots()
-                if idx1==idx0:
-                    im = ax.pcolormesh(self.xi, self.yi, self.zi[:,:,idx0], cmap=self.cmap.get())
-                else:
-                    im = ax.pcolormesh(self.xi, self.yi, self.zi[:,:,idx0:idx1].sum(axis=2), cmap=self.cmap.get())
+                im = ax.pcolormesh(self.xi, self.yi, self.zi[:,:,idx0:idx1].sum(axis=2), cmap=self.cmap.get())
                 ax.axis([xmin, xmax, ymin, ymax])
                 ax.set_xlabel('X, μm'), ax.set_ylabel('Y, μm')
                 fig.colorbar(im, ax=ax)
@@ -339,16 +348,10 @@ class GUI:
                 plt.close()
             else:
             #patching
-                shift = 0.5
-                xs0 = np.zeros(len(self.xs))
-                xs0[0] = self.xs[0]
-                for i in range(1, len(self.xs)):
-                    xs0[i] = self.xs[i] + shift * (self.xs[i] - self.xs[i - 1])
-                # get array of intensities for energies within region
                 sdd = self.signal[:,idx0:idx1].sum(axis=1)
     
                 fig, ax = plt.subplots()
-                xy = zip(xs0, self.ys)
+                xy = zip(self.xs, self.ys)
                 # construct Rects
                 patch_size_val = float(self.patch_size.get())
                 patches = [Rectangle(xyi, width=patch_size_val,height=patch_size_val) for xyi in xy]
