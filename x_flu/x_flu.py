@@ -43,12 +43,16 @@ class GUI:
         self.xs = None
         self.ys = None
         self.signal = None
+        self.xmin = self.xmax = self.ymin = self.ymax = 0
         
         self.xi = self.yi = self.zi = None
 
         self.reinterpolate = True
         self.file_loaded = False
         self.entry_loaded = False
+        
+        self.default_beam_size = 0.05
+        self.default_grid_step = self.default_beam_size/2
                
         # get x-ray energy lines
         data_path = os.path.join(os.path.dirname(__file__),'data')
@@ -137,7 +141,7 @@ class GUI:
         self.pslabel.grid(column=1, row=3, sticky=W)
         self.patch_size_entry = ttk.Entry(self.advframe, width=10, textvariable=self.patch_size)
         self.patch_size_entry.grid(column=2, row=3, sticky=W)
-        self.patch_size.set(str(0.05))
+        self.patch_size.set(str(self.default_beam_size))
         self.pslabel2 = ttk.Label(self.advframe, text="mm")
         self.pslabel2.grid(column=3, row=3, sticky=W)
         
@@ -148,7 +152,7 @@ class GUI:
         self.gslabel.grid(column=4, row=3, sticky=W)
         self.grid_step_entry = ttk.Entry(self.advframe, width=10, textvariable=self.grid_step)
         self.grid_step_entry.grid(column=5, row=3, sticky=(W, E))
-        self.grid_step.set(str(0.025))
+        self.grid_step.set(str(self.default_grid_step))
         self.grid_step.trace_add("write", self.set_reinterpolate)
         self.gslabel2 = ttk.Label(self.advframe, text="mm")
         self.gslabel2.grid(column=6, row=3, sticky=W)
@@ -242,12 +246,29 @@ class GUI:
                     self.entry_loaded = False 
                     return
                 
-                # Pre-process the x values as in example
+                ### ************************************************************************************
+                ###
+                ### The following part of the code is taken from the example provided  
+                ### 
+                ### although the physical meaning of the following transformation is not clear to me,
+                ### I leave this part it as is, asumming that such preprocessing is required
+                ### due to specifics of data collection process
+                ###
+                ### ************************************************************************************
+                
+                #Shift the X data to line up the rows at center.
+                # Pre-process the x values. The data needs to be shifted to the midway point between x[n+1] and x[n].
                 shift = 0.5
                 self.xs = np.zeros(len(xs))
                 self.xs[0] = xs[0]
                 for i in range(1, len(self.xs)):
                     self.xs[i] = xs[i] + shift * (xs[i] - xs[i - 1])
+                    
+                self.xmin = min(xs)
+                self.xmax = max(xs)
+                self.ymin = min(self.ys)
+                self.ymax = max(self.ys)
+                
                 idx0 = 0
                 idx1 = 10*(len(self.signal[0])-1)
                 self.ereg_lbl['text'] = f'Energy region (from {idx0} to {idx1} eV)'
@@ -322,47 +343,69 @@ class GUI:
             self.e_from.set(str(idx0*10))
             self.e_to.set(str((idx1-1)*10))
 
-            xmin = round(min(self.xs),3)
-            xmax = round(max(self.xs),3)
-            ymin = round(min(self.ys),3)
-            ymax = round(max(self.ys),3)
-            
+            fig, ax = plt.subplots()
+            # add inverted axes as in example, 
+            # assuming that resulted figure corresponds real position of the sample
+            ax.axis([self.xmax, self.xmin, self.ymax, self.ymin])
+            ax.set_xlabel('X, μm'), ax.set_ylabel('Y, μm')
+                
             if self.vtype.get()=='interp':
             # interpolate on grid 
-                grid_step_val = float(self.grid_step.get())
+                grid_step = self.grid_step.get()
+                #check grid step val, set to default if None or negative 
+                if not grid_step:
+                    grid_step_val = self.default_grid_step
+                    self.grid_step.set(grid_step_val)
+                elif float(grid_step)<=0:
+                    grid_step_val = self.default_grid_step
+                    self.grid_step.set(grid_step_val)
+                else:
+                    grid_step_val = float(grid_step)
+                #
                 if self.reinterpolate:
-                    self.xi = np.arange(xmin,xmax+grid_step_val,grid_step_val)
-                    self.yi = np.arange(ymin,ymax+grid_step_val,grid_step_val)
-                    self.xi,self.yi = np.meshgrid(self.xi,self.yi)
-                    
-                    self.zi = griddata((self.xs,self.ys),self.signal,(self.xi,self.yi),method=self.itype.get())
-                    
+                    patch_size_val = float(self.patch_size.get())
+                    self.xi = np.arange(self.xmin,self.xmax+grid_step_val,grid_step_val)
+                    self.yi = np.arange(self.ymin,self.ymax+grid_step_val,grid_step_val)
+                    self.xi,self.yi = np.meshgrid(self.xi,self.yi)                    
+                    self.zi = griddata((self.xs,self.ys),self.signal,(self.xi,self.yi),method=self.itype.get())                    
                     self.reinterpolate = False
-                    
-                fig, ax = plt.subplots()
+                
                 im = ax.pcolormesh(self.xi, self.yi, self.zi[:,:,idx0:idx1].sum(axis=2), cmap=self.cmap.get())
-                ax.axis([xmin, xmax, ymin, ymax])
-                ax.set_xlabel('X, μm'), ax.set_ylabel('Y, μm')
                 fig.colorbar(im, ax=ax)
-                plt.show()            
-                plt.close()
+                
             else:
             #patching
-                sdd = self.signal[:,idx0:idx1].sum(axis=1)
-    
-                fig, ax = plt.subplots()
-                xy = zip(self.xs, self.ys)
+                sdd = self.signal[:,idx0:idx1].sum(axis=1)    
+                patch_size = self.patch_size.get()
+                #check patch size val, set to default if None or negative 
+                if not patch_size:
+                    patch_size_val = self.default_beam_size
+                    self.grid_step.set(patch_size_val)
+                elif float(patch_size)<=0:
+                    patch_size_val = self.default_beam_size
+                    self.patch_size.set(patch_size_val)
+                else:
+                    patch_size_val = float(patch_size)
+                
+                ### ************************************************************************************
+                ###
+                ### According to the example provided, x and y coordinates of the data correspond 
+                ### to the center of the beam (since bokeh rect uses rectangle center coordinates)
+                ### 
+                ### matplotlib Rectangle, however, uses lower left rectangle coordinate
+                ### therefore coordinates are shifted left and down {half the size of beam} units
+                ###
+                ### ************************************************************************************
+                xy = zip(self.xs-patch_size_val/2, self.ys-patch_size_val/2)
                 # construct Rects
-                patch_size_val = float(self.patch_size.get())
                 patches = [Rectangle(xyi, width=patch_size_val,height=patch_size_val) for xyi in xy]
                 p = PatchCollection(patches, cmap=self.cmap.get())
                 p.set_array(sdd)
-                ax.add_collection(p)
-                ax.axis([xmin, xmax, ymin, ymax])
-                ax.set_xlabel('X, μm'), ax.set_ylabel('Y, μm')
+                ax.add_collection(p)                
                 plt.colorbar(p)
-                plt.show()
-                plt.close()
+            
+            plt.show()
+            plt.close()
                 
                 
         except ValueError:
